@@ -1,36 +1,5 @@
-# ---------------------------------------------------------------------
-# Base image
-# ---------------------------------------------------------------------
-FROM python:3.13-slim
-
-# Set working directory
+FROM python:3.11-slim
+RUN pip install flask gunicorn psutil
+ADD workload.py /app/workload.py
 WORKDIR /app
-
-# ---------------------------------------------------------------------
-# System dependencies
-# ---------------------------------------------------------------------
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3-setuptools \
- && rm -rf /var/lib/apt/lists/*
-
-# ---------------------------------------------------------------------
-# Python dependencies
-# ---------------------------------------------------------------------
-# GPUtil will skip gracefully if no GPU is detected
-RUN pip install --no-cache-dir psutil GPUtil py-cpuinfo
-
-# ---------------------------------------------------------------------
-# Copy project files
-# ---------------------------------------------------------------------
-COPY . /app
-
-# ---------------------------------------------------------------------
-# Environment variables
-# ---------------------------------------------------------------------
-# Root folder for result logs (bind this to local drive)
-ENV RESULTS_ROOT=/app/results
-
-# ---------------------------------------------------------------------
-# Container entry point
-# ---------------------------------------------------------------------
-CMD ["python", "runner.py"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "2", "workload:app"]
